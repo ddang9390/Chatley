@@ -81,3 +81,20 @@ func (q *Queries) GetOneUser(ctx context.Context, id string) (User, error) {
 	err := row.Scan(&i.ID, &i.Email, &i.Password)
 	return i, err
 }
+
+const updateUser = `-- name: UpdateUser :exec
+UPDATE users
+SET email = $2, Password = $3
+WHERE $1 = id
+`
+
+type UpdateUserParams struct {
+	ID       string
+	Email    string
+	Password string
+}
+
+func (q *Queries) UpdateUser(ctx context.Context, arg UpdateUserParams) error {
+	_, err := q.db.ExecContext(ctx, updateUser, arg.ID, arg.Email, arg.Password)
+	return err
+}

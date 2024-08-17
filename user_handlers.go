@@ -19,7 +19,7 @@ type User struct {
 func createUser(cfg *apiConfig) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var user User
-		// // Step 1: Parse the request body
+		// Step 1: Parse the request body
 		if err := json.NewDecoder(r.Body).Decode(&user); err != nil {
 			http.Error(w, "Invalid request payload", http.StatusBadRequest)
 			return
@@ -57,7 +57,8 @@ func createUser(cfg *apiConfig) http.HandlerFunc {
 func loginUser(cfg *apiConfig) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var user User
-		// // Step 1: Parse the request body
+		fmt.Println(r.Body)
+		// Parse the request body
 		if err := json.NewDecoder(r.Body).Decode(&user); err != nil {
 			http.Error(w, "Invalid request payload", http.StatusBadRequest)
 			return
@@ -114,13 +115,12 @@ func deleteUser(cfg *apiConfig) http.HandlerFunc {
 		// JWT validation for user authentication
 		_, err := jwtValidate(r, cfg.jwtSecret)
 		if err != nil {
-			fmt.Println(err)
 			http.Error(w, "Invalid token", http.StatusUnauthorized)
 			return
 		}
 
 		var user User
-		// // Step 1: Parse the request body
+		// Parse the request body
 		if err := json.NewDecoder(r.Body).Decode(&user); err != nil {
 			http.Error(w, "Invalid request payload", http.StatusBadRequest)
 			return
@@ -129,7 +129,6 @@ func deleteUser(cfg *apiConfig) http.HandlerFunc {
 		ctx := r.Context()
 		u, err := cfg.DB.GetOneUser(ctx, user.ID)
 		if err != nil {
-			fmt.Println(err)
 			http.Error(w, "Error deleting user", http.StatusInternalServerError)
 			return
 		}
@@ -140,7 +139,6 @@ func deleteUser(cfg *apiConfig) http.HandlerFunc {
 
 		err = bcrypt.CompareHashAndPassword([]byte(foundUser.Password), []byte(user.Password))
 		if err != nil {
-			fmt.Printf("Input PW:%s, Actual PW:%s\n\n", user.Password, foundUser.Password)
 			http.Error(w, "Invalid credentials", http.StatusUnauthorized)
 			return
 		}
@@ -150,8 +148,47 @@ func deleteUser(cfg *apiConfig) http.HandlerFunc {
 			Password: foundUser.Password,
 		})
 		if err != nil {
-			fmt.Println(err)
 			http.Error(w, "Error deleting user", http.StatusInternalServerError)
+			return
+		}
+
+		w.WriteHeader(200)
+	}
+}
+
+func updateUser(cfg *apiConfig) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		// JWT validation for user authentication
+		_, err := jwtValidate(r, cfg.jwtSecret)
+		if err != nil {
+			http.Error(w, "Invalid token", http.StatusUnauthorized)
+			return
+		}
+		fmt.Println(r.Body)
+		var user User
+		// Parse the request body
+		if err := json.NewDecoder(r.Body).Decode(&user); err != nil {
+			fmt.Println(err)
+			http.Error(w, "Invalid request payload", http.StatusBadRequest)
+			return
+		}
+
+		// Encode the password
+		encPW, err := bcrypt.GenerateFromPassword([]byte(user.Password), bcrypt.DefaultCost)
+		if err != nil {
+			http.Error(w, "Could not use password", http.StatusInternalServerError)
+			return
+		}
+
+		ctx := r.Context()
+		err = cfg.DB.UpdateUser(ctx, database.UpdateUserParams{
+			ID:       user.ID,
+			Email:    user.Email,
+			Password: string(encPW),
+		})
+		if err != nil {
+			fmt.Println(err)
+			http.Error(w, "Failed to update user", http.StatusInternalServerError)
 			return
 		}
 

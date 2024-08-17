@@ -55,7 +55,6 @@ func jwtValidate(r *http.Request, secret string) (string, error) {
 		return "", fmt.Errorf("issue getting token")
 	}
 	claims := &customClaims{}
-	fmt.Println(secret)
 
 	token, err := jwt.ParseWithClaims(tokenString, claims, func(token *jwt.Token) (interface{}, error) {
 		return []byte(secret), nil
@@ -64,7 +63,6 @@ func jwtValidate(r *http.Request, secret string) (string, error) {
 		return "", err
 	}
 
-	fmt.Println(token)
 	userId, err := token.Claims.GetSubject()
 	if err != nil {
 		return "", err

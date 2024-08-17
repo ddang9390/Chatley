@@ -11,8 +11,8 @@ JWT_SECRET=insert_key_here
 
 Installation:
 1. Run the following commands in your terminal:
-        'go get "github.com/gorilla/mux"' and 
-        'go get "github.com/joho/godotenv' in the terminal
+        'go get "github.com/gorilla/mux"' 
+        'go get "github.com/joho/godotenv'
         'go install github.com/sqlc-dev/sqlc/cmd/sqlc@latest'
         'go install github.com/pressly/goose/v3/cmd/goose@latest'
         
@@ -20,3 +20,4 @@ Installation:
         PORT="(insert port number you will be using here)"
         DB_URL="(insert database URL for the database you will be using)"
         TEST_DB_URL="(insert database URL for the database you will be using for testing)"
+        JWT_SECRET=insert_key_here
