@@ -53,3 +53,56 @@ func createUser(cfg *apiConfig) http.HandlerFunc {
 	}
 
 }
+
+func loginUser(cfg *apiConfig) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		var user User
+		// // Step 1: Parse the request body
+		if err := json.NewDecoder(r.Body).Decode(&user); err != nil {
+			http.Error(w, "Invalid request payload", http.StatusBadRequest)
+			return
+		}
+		fmt.Println(user)
+
+		ctx := r.Context()
+		users, err := cfg.DB.GetAllUsers(ctx)
+		if err != nil {
+			fmt.Println(err)
+			http.Error(w, "Error getting users", http.StatusInternalServerError)
+			return
+		}
+		foundEmail := false
+		var foundUser User
+		for _, u := range users {
+			if u.Email == user.Email {
+				foundEmail = true
+				foundUser.Email = u.Email
+				foundUser.ID = u.ID
+				foundUser.Password = u.Password
+
+				break
+			}
+		}
+		if !foundEmail {
+			http.Error(w, "Could not find user", http.StatusUnauthorized)
+			return
+		}
+
+		// Decrypt found user's password and compare it
+		err = bcrypt.CompareHashAndPassword([]byte(foundUser.Password), []byte(user.Password))
+		if err != nil {
+			fmt.Printf("Input PW:%s, Actual PW:%s\n\n", user.Password, foundUser.Password)
+			http.Error(w, "Invalid credentials", http.StatusUnauthorized)
+			return
+		}
+
+		response := map[string]interface{}{
+			"id":    foundUser.ID,
+			"email": foundUser.Email,
+		}
+
+		w.WriteHeader(200)
+		json.NewEncoder(w).Encode(response)
+
+	}
+}

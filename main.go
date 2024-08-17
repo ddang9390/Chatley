@@ -34,6 +34,7 @@ func main() {
 	//Handler functions
 	router.HandleFunc("/", readyHandler)
 	router.HandleFunc("POST /users", createUser(cfg))
+	router.HandleFunc("GET /users", loginUser(cfg))
 
 	//Handle image and css files
 	router.Handle("/assets/", http.StripPrefix("/assets/", http.FileServer(http.Dir("assets"))))
