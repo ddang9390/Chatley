@@ -5,6 +5,9 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+
+	"github.com/google/uuid"
+	"golang.org/x/crypto/bcrypt"
 )
 
 type User struct {
@@ -23,13 +26,23 @@ func createUser(cfg *apiConfig) http.HandlerFunc {
 		}
 		fmt.Println(user)
 
+		// Encode the password
+		encPW, err1 := bcrypt.GenerateFromPassword([]byte(user.Password), bcrypt.DefaultCost)
+		if err1 != nil {
+			http.Error(w, "Could not use password", http.StatusInternalServerError)
+			return
+		}
+
 		// Step 2: Insert into the database
 		ctx := r.Context()
+		user.ID = uuid.New().String()
 		_, err := cfg.DB.CreateUser(ctx, database.CreateUserParams{
+			ID:       user.ID,
 			Email:    user.Email,
-			Password: user.Password,
+			Password: string(encPW),
 		})
 		if err != nil {
+			fmt.Println(err)
 			http.Error(w, "Error creating user", http.StatusInternalServerError)
 			return
 		}

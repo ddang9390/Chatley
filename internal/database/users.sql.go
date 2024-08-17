@@ -16,7 +16,7 @@ RETURNING id, email, password
 `
 
 type CreateUserParams struct {
-	ID       int32
+	ID       string
 	Email    string
 	Password string
 }
