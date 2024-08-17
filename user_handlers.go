@@ -95,10 +95,12 @@ func loginUser(cfg *apiConfig) http.HandlerFunc {
 			http.Error(w, "Invalid credentials", http.StatusUnauthorized)
 			return
 		}
+		token := jwtCreation(user, cfg.jwtSecret)
 
 		response := map[string]interface{}{
 			"id":    foundUser.ID,
 			"email": foundUser.Email,
+			"token": token,
 		}
 
 		w.WriteHeader(200)
@@ -109,6 +111,14 @@ func loginUser(cfg *apiConfig) http.HandlerFunc {
 
 func deleteUser(cfg *apiConfig) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		// JWT validation for user authentication
+		_, err := jwtValidate(r, cfg.jwtSecret)
+		if err != nil {
+			fmt.Println(err)
+			http.Error(w, "Invalid token", http.StatusUnauthorized)
+			return
+		}
+
 		var user User
 		// // Step 1: Parse the request body
 		if err := json.NewDecoder(r.Body).Decode(&user); err != nil {

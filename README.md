@@ -5,7 +5,9 @@ Description:
 # Instructions
 1. Create a .env file in the root folder of the project
 2. Add the port you wish to use in the .env file. Example = 'PORT="8080"'  
-3. Run 'go build && ./chatley' in terminal
+3. Run the command 'openssl rand -base64 64' in your terminal and place the output in the .env file like this:
+JWT_SECRET=insert_key_here
+4. Run 'go build && ./chatley' in terminal
 
 Installation:
 1. Run the following commands in your terminal:

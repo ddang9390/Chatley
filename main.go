@@ -14,7 +14,8 @@ import (
 
 // using config struct to store shared data that handlers will need access to
 type apiConfig struct {
-	DB *database.Queries
+	DB        *database.Queries
+	jwtSecret string
 }
 
 func main() {
@@ -27,8 +28,9 @@ func main() {
 		fmt.Println(err)
 	}
 	dbQueries := database.New(db)
+	jwtSecret := os.Getenv("JWT_SECRET")
 
-	cfg := &apiConfig{DB: dbQueries}
+	cfg := &apiConfig{DB: dbQueries, jwtSecret: jwtSecret}
 	router := http.NewServeMux()
 
 	//Handler functions
