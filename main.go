@@ -35,6 +35,7 @@ func main() {
 	router.HandleFunc("/", readyHandler)
 	router.HandleFunc("POST /users", createUser(cfg))
 	router.HandleFunc("GET /users", loginUser(cfg))
+	router.HandleFunc("DELETE /users", deleteUser(cfg))
 
 	//Handle image and css files
 	router.Handle("/assets/", http.StripPrefix("/assets/", http.FileServer(http.Dir("assets"))))

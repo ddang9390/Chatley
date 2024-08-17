@@ -28,6 +28,21 @@ func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (User, e
 	return i, err
 }
 
+const deleteUser = `-- name: DeleteUser :exec
+DELETE FROM users
+WHERE $1 = email AND $2 = Password
+`
+
+type DeleteUserParams struct {
+	Email    string
+	Password string
+}
+
+func (q *Queries) DeleteUser(ctx context.Context, arg DeleteUserParams) error {
+	_, err := q.db.ExecContext(ctx, deleteUser, arg.Email, arg.Password)
+	return err
+}
+
 const getAllUsers = `-- name: GetAllUsers :many
 SELECT id, email, password FROM users
 `
@@ -53,4 +68,16 @@ func (q *Queries) GetAllUsers(ctx context.Context) ([]User, error) {
 		return nil, err
 	}
 	return items, nil
+}
+
+const getOneUser = `-- name: GetOneUser :one
+SELECT id, email, password FROM users
+WHERE $1 = id
+`
+
+func (q *Queries) GetOneUser(ctx context.Context, id string) (User, error) {
+	row := q.db.QueryRowContext(ctx, getOneUser, id)
+	var i User
+	err := row.Scan(&i.ID, &i.Email, &i.Password)
+	return i, err
 }

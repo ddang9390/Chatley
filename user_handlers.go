@@ -106,3 +106,45 @@ func loginUser(cfg *apiConfig) http.HandlerFunc {
 
 	}
 }
+
+func deleteUser(cfg *apiConfig) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		var user User
+		// // Step 1: Parse the request body
+		if err := json.NewDecoder(r.Body).Decode(&user); err != nil {
+			http.Error(w, "Invalid request payload", http.StatusBadRequest)
+			return
+		}
+
+		ctx := r.Context()
+		u, err := cfg.DB.GetOneUser(ctx, user.ID)
+		if err != nil {
+			fmt.Println(err)
+			http.Error(w, "Error deleting user", http.StatusInternalServerError)
+			return
+		}
+		var foundUser User
+		foundUser.Email = u.Email
+		foundUser.ID = u.ID
+		foundUser.Password = u.Password
+
+		err = bcrypt.CompareHashAndPassword([]byte(foundUser.Password), []byte(user.Password))
+		if err != nil {
+			fmt.Printf("Input PW:%s, Actual PW:%s\n\n", user.Password, foundUser.Password)
+			http.Error(w, "Invalid credentials", http.StatusUnauthorized)
+			return
+		}
+
+		err = cfg.DB.DeleteUser(ctx, database.DeleteUserParams{
+			Email:    user.Email,
+			Password: foundUser.Password,
+		})
+		if err != nil {
+			fmt.Println(err)
+			http.Error(w, "Error deleting user", http.StatusInternalServerError)
+			return
+		}
+
+		w.WriteHeader(200)
+	}
+}

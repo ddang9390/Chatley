@@ -56,7 +56,7 @@ func TestMain(m *testing.M) {
 	os.Exit(code) // Exit with test code
 }
 
-func TestCreateUser(t *testing.T) {
+func getQueries() database.Queries {
 	godotenv.Load()
 	testDBURL := os.Getenv("TEST_DB_URL")
 
@@ -66,14 +66,20 @@ func TestCreateUser(t *testing.T) {
 	}
 	dbQueries := database.New(db)
 
-	cfg := &apiConfig{DB: dbQueries}
+	return *dbQueries
+}
+
+func TestCreateUser(t *testing.T) {
+	dbQueries := getQueries()
+
+	cfg := &apiConfig{DB: &dbQueries}
 
 	reqBody := map[string]string{
 		"email":    "test@email.com",
 		"password": "123456",
 	}
 	body, _ := json.Marshal(reqBody)
-	req, err := http.NewRequest(http.MethodPost, "/", bytes.NewReader(body))
+	req, err := http.NewRequest(http.MethodPost, "/users", bytes.NewReader(body))
 	req.Header.Set("Content-Type", "application/json")
 
 	fmt.Println(err)
@@ -85,5 +91,30 @@ func TestCreateUser(t *testing.T) {
 
 	if status := responseRecorder.Code; status != http.StatusCreated {
 		t.Errorf("handler returned wrong status code: got %v want %v", status, http.StatusCreated)
+	}
+}
+
+func TestLoginUser(t *testing.T) {
+	dbQueries := getQueries()
+
+	cfg := &apiConfig{DB: &dbQueries}
+
+	reqBody := map[string]string{
+		"email":    "test@email.com",
+		"password": "123456",
+	}
+	body, _ := json.Marshal(reqBody)
+	req, err := http.NewRequest(http.MethodGet, "/users", bytes.NewReader(body))
+	req.Header.Set("Content-Type", "application/json")
+
+	fmt.Println(err)
+
+	responseRecorder := httptest.NewRecorder()
+
+	handler := http.HandlerFunc(loginUser(cfg))
+	handler.ServeHTTP(responseRecorder, req)
+
+	if status := responseRecorder.Code; status != http.StatusOK {
+		t.Errorf("handler returned wrong status code: got %v want %v", status, http.StatusOK)
 	}
 }
