@@ -1,6 +1,6 @@
 -- name: CreateUser :one
-INSERT INTO users (id, Email, Password)
-VALUES ($1, $2, $3)
+INSERT INTO users (id, Email, Password, created_date)
+VALUES ($1, $2, $3, CURRENT_TIMESTAMP)
 RETURNING *;
 
 -- name: GetAllUsers :many
