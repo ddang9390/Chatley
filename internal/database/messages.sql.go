@@ -66,10 +66,28 @@ func (q *Queries) DeleteMessageForUser(ctx context.Context, arg DeleteMessageFor
 	return err
 }
 
+const editMessage = `-- name: EditMessage :exec
+UPDATE messages
+SET content = $1
+WHERE chat_id = $2 AND sender = $3
+`
+
+type EditMessageParams struct {
+	Content sql.NullString
+	ChatID  sql.NullInt32
+	Sender  sql.NullString
+}
+
+func (q *Queries) EditMessage(ctx context.Context, arg EditMessageParams) error {
+	_, err := q.db.ExecContext(ctx, editMessage, arg.Content, arg.ChatID, arg.Sender)
+	return err
+}
+
 const getMessagesFromChat = `-- name: GetMessagesFromChat :many
 SELECT message_id, created_date, content, sender, chat_id FROM messages
 WHERE chat_id = $1
 ORDER BY created_date
+LIMIT 100
 `
 
 func (q *Queries) GetMessagesFromChat(ctx context.Context, chatID sql.NullInt32) ([]Message, error) {
@@ -105,6 +123,7 @@ const getMessagesFromChatAndUser = `-- name: GetMessagesFromChatAndUser :many
 SELECT message_id, created_date, content, sender, chat_id FROM messages
 WHERE chat_id = $1 AND sender = $2
 ORDER BY created_date
+LIMIT 100
 `
 
 type GetMessagesFromChatAndUserParams struct {
