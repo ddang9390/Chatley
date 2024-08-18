@@ -164,7 +164,7 @@ func updateUser(cfg *apiConfig) http.HandlerFunc {
 			http.Error(w, "Invalid token", http.StatusUnauthorized)
 			return
 		}
-		fmt.Println(r.Body)
+
 		var user User
 		// Parse the request body
 		if err := json.NewDecoder(r.Body).Decode(&user); err != nil {
